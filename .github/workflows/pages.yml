@@ -1,0 +1,46 @@
+name: Publicar ARQVENTAS CENTRAL WEB
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: github-pages-arqventas-central-web
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Descargar sitio original
+        uses: actions/checkout@v4
+      - name: Comprobar pagina y preparar sitio aislado
+        shell: bash
+        run: |
+          test -s index.html
+          grep -q 'ARQVENTAS Central V1' index.html
+          grep -q 'SASSI DEL VALLE' index.html
+          grep -q 'MASTER CIR' index.html
+          mkdir -p _site
+          cp index.html _site/index.html
+          touch _site/.nojekyll
+          test "$(find _site -type f | wc -l)" -eq 2
+      - name: Activar y configurar GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Preparar publicacion
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Publicar GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
